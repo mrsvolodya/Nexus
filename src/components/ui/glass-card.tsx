@@ -19,7 +19,7 @@ const glassVariants = cva(
         false: "",
       },
       interactive: {
-        true: "spotlight transition-transform duration-500",
+        true: "spotlight",
         false: "",
       },
     },

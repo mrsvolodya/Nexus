@@ -1,14 +1,9 @@
 "use client";
 
-import { createElement, useEffect, useRef, type ReactNode } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useMemo } from "react";
+import { motion, type Variants } from "motion/react";
 import { cn } from "@/utils/cn";
-import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { EASE_OUT } from "@/utils/motion";
 
 type AllowedTag = "span" | "div" | "h1" | "h2" | "h3" | "p";
 
@@ -16,6 +11,13 @@ type SplitRevealProps = {
   children: string;
   as?: AllowedTag;
   className?: string;
+  /**
+   * Classes applied to each rendered word/char motion.span.
+   * Use this for text-color utilities (e.g. `gradient-text`, `text-primary`)
+   * — `background-clip: text` on a parent breaks when children introduce
+   * nested overflow-hidden contexts, so the clip must live on the token.
+   */
+  textClassName?: string;
   delay?: number;
   stagger?: number;
   duration?: number;
@@ -25,89 +27,86 @@ type SplitRevealProps = {
 };
 
 /**
- * Cinematic text reveal. Splits the string into word/char spans and runs a
- * masked y+opacity stagger via GSAP. No CSS hacks — each token is its own span.
+ * Masked word/char reveal, Motion-variants driven.
+ *  - Parent drives `staggerChildren` + `delayChildren`.
+ *  - Each token is an overflow-masked wrapper + a motion.span.
+ *  - Deterministic under strict-mode double-mount and SSR hydration.
  */
 export function SplitReveal({
   children,
   as = "span",
   className,
+  textClassName,
   delay = 0,
-  stagger = 0.045,
-  duration = 0.9,
+  stagger = 0.04,
+  duration = 0.85,
   by = "word",
   scroll = false,
 }: SplitRevealProps) {
-  const rootRef = useRef<HTMLElement | null>(null);
-  const reduce = usePrefersReducedMotion();
-  const tokens = splitTokens(children, by);
+  const tokens = useMemo(() => splitTokens(children, by), [children, by]);
 
-  useEffect(() => {
-    if (reduce) return;
-    const root = rootRef.current;
-    if (!root) return;
+  const parentVariants = useMemo<Variants>(
+    () => ({
+      hidden: {},
+      visible: {
+        transition: { staggerChildren: stagger, delayChildren: delay },
+      },
+    }),
+    [stagger, delay],
+  );
 
-    const items = root.querySelectorAll<HTMLElement>("[data-split-item]");
+  const childVariants = useMemo<Variants>(
+    () => ({
+      hidden: { y: "110%", opacity: 0 },
+      visible: {
+        y: 0,
+        opacity: 1,
+        transition: { duration, ease: EASE_OUT },
+      },
+    }),
+    [duration],
+  );
 
-    const ctx = gsap.context(() => {
-      const tween = gsap.fromTo(
-        items,
-        { yPercent: 110, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration,
-          ease: "power4.out",
-          stagger,
-          delay,
-          scrollTrigger: scroll
-            ? {
-                trigger: root,
-                start: "top 85%",
-                once: true,
-              }
-            : undefined,
-        },
-      );
-      return () => tween.kill();
-    }, root);
+  const revealProps = scroll
+    ? {
+        initial: "hidden",
+        whileInView: "visible",
+        viewport: { once: true, amount: 0.3 },
+      }
+    : { initial: "hidden", animate: "visible" };
 
-    return () => ctx.revert();
-  }, [reduce, scroll, delay, stagger, duration]);
+  const Tag = motion[as];
 
-  return createElement(
-    as,
-    {
-      ref: rootRef,
-      className: cn("inline-block", className),
-      "aria-label": children,
-    },
-    tokens.map((t, i) => (
-      <span
-        key={i}
-        className="inline-block overflow-hidden align-baseline"
-        aria-hidden="true"
-      >
-        <span data-split-item className="inline-block will-change-transform">
-          {t === " " ? "\u00A0" : t}
+  return (
+    <Tag
+      {...revealProps}
+      variants={parentVariants}
+      className={cn("inline-block", className)}
+      aria-label={children}
+    >
+      {tokens.map((t, i) => (
+        <span
+          key={i}
+          className="inline-block overflow-hidden align-baseline"
+          aria-hidden="true"
+        >
+          <motion.span
+            variants={childVariants}
+            className={cn(
+              "inline-block will-change-transform",
+              textClassName,
+            )}
+          >
+            {t === " " ? "\u00A0" : t}
+          </motion.span>
+          {by === "word" && i < tokens.length - 1 ? "\u00A0" : null}
         </span>
-        {by === "word" && i < tokens.length - 1 ? "\u00A0" : null}
-      </span>
-    )),
+      ))}
+    </Tag>
   );
 }
 
 function splitTokens(text: string, by: "word" | "char"): string[] {
   if (by === "word") return text.split(/\s+/).filter(Boolean);
   return [...text];
-}
-
-export function RevealText({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return <span className={className}>{children}</span>;
 }

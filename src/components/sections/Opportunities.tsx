@@ -51,7 +51,7 @@ export function Opportunities() {
             key={op.role}
             href={CTA_HREF}
             variants={revealItem}
-            whileHover={{ y: -3 }}
+            whileHover={{ y: -2 }}
             transition={cardHover}
           >
             <GlassCard

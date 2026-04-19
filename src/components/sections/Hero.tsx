@@ -2,18 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "motion/react";
 import { ArrowRight, CalendarClock, Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Chip } from "@/components/ui/chip";
 import { Modal } from "@/components/ui/modal";
-import { SplitReveal, MagneticHover } from "@/components/motion";
+import {
+  SplitReveal,
+  MagneticHover,
+  ScrollCounter,
+} from "@/components/motion";
 import { HeroCanvas } from "@/components/3d/HeroCanvas";
 import { HERO_STATS } from "@/constants/stats";
 import { CTA_HREF } from "@/constants/nav";
 import { useClickOrigin } from "@/hooks/useClickOrigin";
 import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
@@ -27,6 +36,10 @@ export function Hero() {
     const root = rootRef.current;
     const card = cardRef.current;
     if (!root) return;
+
+    const hasHover =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     const ctx = gsap.context(() => {
       gsap
@@ -45,30 +58,59 @@ export function Hero() {
           "-=0.4",
         );
 
+      // Cinematic scroll scrub: the hero card recedes slightly as you scroll.
+      // Kept subtle — overdoing it reads as "empty space" below the hero.
       if (card) {
-        const qx = gsap.quickTo(card, "rotationY", { duration: 0.8, ease: "power3.out" });
-        const qy = gsap.quickTo(card, "rotationX", { duration: 0.8, ease: "power3.out" });
-        const onMove = (e: PointerEvent) => {
-          const rect = card.getBoundingClientRect();
-          const nx = (e.clientX - rect.left) / rect.width - 0.5;
-          const ny = (e.clientY - rect.top) / rect.height - 0.5;
-          qx(nx * 6);
-          qy(-ny * 6);
-        };
-        const onLeave = () => {
-          qx(0);
-          qy(0);
-        };
-        card.addEventListener("pointermove", onMove);
-        card.addEventListener("pointerleave", onLeave);
-        return () => {
-          card.removeEventListener("pointermove", onMove);
-          card.removeEventListener("pointerleave", onLeave);
-        };
+        gsap.to(card, {
+          y: -16,
+          scale: 0.98,
+          opacity: 0.85,
+          ease: "none",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 10%",
+            end: "bottom top+=100",
+            scrub: 0.6,
+          },
+        });
       }
     }, root);
 
-    return () => ctx.revert();
+    // Tilt listeners live outside gsap.context so we can clean them up.
+    let removeTilt: (() => void) | undefined;
+    if (card && hasHover) {
+      const qx = gsap.quickTo(card, "rotationY", {
+        duration: 0.8,
+        ease: "power3.out",
+      });
+      const qy = gsap.quickTo(card, "rotationX", {
+        duration: 0.8,
+        ease: "power3.out",
+      });
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerType !== "mouse") return;
+        const rect = card.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width - 0.5;
+        const ny = (e.clientY - rect.top) / rect.height - 0.5;
+        qx(nx * 4);
+        qy(-ny * 4);
+      };
+      const onLeave = () => {
+        qx(0);
+        qy(0);
+      };
+      card.addEventListener("pointermove", onMove);
+      card.addEventListener("pointerleave", onLeave);
+      removeTilt = () => {
+        card.removeEventListener("pointermove", onMove);
+        card.removeEventListener("pointerleave", onLeave);
+      };
+    }
+
+    return () => {
+      removeTilt?.();
+      ctx.revert();
+    };
   }, [reduce]);
 
   const handleScheduleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -80,11 +122,11 @@ export function Hero() {
     <section
       id="top"
       ref={rootRef}
-      className="relative isolate overflow-hidden pt-36 pb-24 sm:pt-40 lg:pt-44 lg:pb-32"
+      className="relative isolate overflow-hidden pt-36 pb-16 sm:pt-40 sm:pb-20 lg:pt-44 lg:pb-24"
       aria-labelledby="hero-title"
     >
-      {/* 3D centerpiece — lives behind the content, pointer-through */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]">
+      {/* Premium backdrop — contained inside the section, pointer-through */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black_40%,transparent_100%)]">
           <HeroCanvas />
         </div>
@@ -120,7 +162,12 @@ export function Hero() {
             <SplitReveal as="span" className="block" delay={0.15}>
               Scale teams.
             </SplitReveal>
-            <SplitReveal as="span" className="block gradient-text" delay={0.45}>
+            <SplitReveal
+              as="span"
+              className="block"
+              textClassName="gradient-text"
+              delay={0.45}
+            >
               Grow talent. Deliver.
             </SplitReveal>
           </h1>
@@ -136,31 +183,27 @@ export function Hero() {
 
           <div
             data-hero="ctas"
-            className="mt-9 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
+            className="mt-9 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row sm:gap-5"
           >
-            <MagneticHover strength={0.3}>
-              <a
-                href={CTA_HREF}
-                className={buttonVariants({
-                  size: "lg",
-                  className: "group w-full sm:w-auto",
-                })}
-              >
-                Apply as an engineer
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
-            </MagneticHover>
-            <MagneticHover strength={0.25}>
-              <Button
-                variant="glass"
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={handleScheduleClick}
-              >
-                <CalendarClock className="h-4 w-4" />
-                Hire a team
-              </Button>
-            </MagneticHover>
+            <a
+              href={CTA_HREF}
+              className={buttonVariants({
+                size: "lg",
+                className: "group w-full sm:w-auto",
+              })}
+            >
+              Apply as an engineer
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </a>
+            <Button
+              variant="glass"
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={handleScheduleClick}
+            >
+              <CalendarClock className="h-4 w-4" />
+              Hire a team
+            </Button>
           </div>
         </div>
 
@@ -214,9 +257,10 @@ export function Hero() {
                   data-hero="stat"
                   className="bg-white/50 p-5 text-left backdrop-blur"
                 >
-                  <div className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                    {s.value}
-                  </div>
+                  <ScrollCounter
+                    value={s.value}
+                    className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+                  />
                   <div className="mt-1 text-sm text-foreground/70">
                     {s.label}
                   </div>

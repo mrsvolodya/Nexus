@@ -1,16 +1,62 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight, Check } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Chip } from "@/components/ui/chip";
-import { Reveal, RevealStagger, revealItem } from "@/components/shared/Reveal";
+import { Reveal } from "@/components/shared/Reveal";
 import { SERVICES } from "@/constants/services";
 import type { Service } from "@/types/content";
-import { cardHover } from "@/utils/motion";
+import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function Services() {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const reduce = usePrefersReducedMotion();
+
+  /**
+   * Scroll-choreographed entrance: cards slide in from alternating horizontal
+   * offsets while the section scrubs into view. A short stagger keeps it
+   * feeling deliberate instead of mechanical.
+   */
+  useEffect(() => {
+    if (reduce) return;
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const ctx = gsap.context(() => {
+      const cards = gsap.utils.toArray<HTMLElement>("[data-service-card]", grid);
+      cards.forEach((card, i) => {
+        const xFrom = i % 2 === 0 ? -40 : 40;
+        gsap.fromTo(
+          card,
+          { x: xFrom, y: 40, opacity: 0, rotateZ: i % 2 === 0 ? -2 : 2 },
+          {
+            x: 0,
+            y: 0,
+            opacity: 1,
+            rotateZ: 0,
+            duration: 0.9,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 88%",
+              once: true,
+            },
+          },
+        );
+      });
+    }, grid);
+
+    return () => ctx.revert();
+  }, [reduce]);
+
   return (
     <Section id="services" aria-labelledby="services-title">
       <div className="mx-auto max-w-2xl text-center">
@@ -22,7 +68,8 @@ export function Services() {
             id="services-title"
             className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl"
           >
-            One partner. <span className="gradient-text">Three ways to scale.</span>
+            One partner.{" "}
+            <span className="gradient-text">Three ways to scale.</span>
           </h2>
         </Reveal>
         <Reveal delay={0.1}>
@@ -33,14 +80,14 @@ export function Services() {
         </Reveal>
       </div>
 
-      <RevealStagger
+      <div
+        ref={gridRef}
         className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3"
-        stagger={0.1}
       >
         {SERVICES.map((s) => (
           <ServiceCard key={s.id} service={s} />
         ))}
-      </RevealStagger>
+      </div>
     </Section>
   );
 }
@@ -48,7 +95,10 @@ export function Services() {
 function ServiceCard({ service }: { service: Service }) {
   const Icon = service.icon;
   return (
-    <motion.div variants={revealItem} whileHover={{ y: -4 }} transition={cardHover}>
+    <div
+      data-service-card
+      className="transition-transform duration-300 hover:-translate-y-0.5"
+    >
       <GlassCard
         as="article"
         intensity="default"
@@ -92,6 +142,6 @@ function ServiceCard({ service }: { service: Service }) {
           ))}
         </ul>
       </GlassCard>
-    </motion.div>
+    </div>
   );
 }
