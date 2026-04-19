@@ -4,7 +4,7 @@ import {
   AVAILABILITY_OPTIONS,
   EXPERIENCE_RANGES,
   ROLES,
-} from "@/data/options";
+} from "@/constants/options";
 
 const MAX_CV_SIZE = 8 * 1024 * 1024; // 8MB
 const ALLOWED_CV_TYPES = [

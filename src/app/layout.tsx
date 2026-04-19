@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,7 +9,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const display = Space_Grotesk({
+const display = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -23,20 +24,21 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://nexus.dev"),
   title: {
-    default: "Nexus — Engineering teams that scale",
+    default: "Nexus — Scale teams. Grow talent. Deliver products.",
     template: "%s · Nexus",
   },
   description:
-    "Nexus connects top developers with ambitious products. We build and place world-class engineering teams for companies that move fast.",
+    "Nexus connects strong engineers with ambitious products. Staff augmentation, dedicated teams, and custom product delivery — with a growth ecosystem built for engineers.",
   keywords: [
     "software outsourcing",
     "staff augmentation",
     "dedicated teams",
     "remote developers",
     "engineering partner",
+    "talent network",
   ],
   openGraph: {
-    title: "Nexus — Engineering teams that scale",
+    title: "Nexus — Scale teams. Grow talent. Deliver products.",
     description:
       "Curated engineering talent, dedicated teams, and end-to-end product delivery.",
     type: "website",
@@ -44,14 +46,14 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nexus — Engineering teams that scale",
+    title: "Nexus — Scale teams. Grow talent. Deliver products.",
     description:
       "Curated engineering talent, dedicated teams, and end-to-end product delivery.",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070D",
+  themeColor: "#eafbff",
   width: "device-width",
   initialScale: 1,
 };
@@ -64,10 +66,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${display.variable} ${mono.variable} dark`}
+      className={`${inter.variable} ${display.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
-      <body className="relative min-h-screen overflow-x-hidden">{children}</body>
+      <body className="relative min-h-screen overflow-x-hidden">
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      </body>
     </html>
   );
 }

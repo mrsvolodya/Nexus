@@ -1,149 +1,192 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { FloatingShapes } from "@/components/effects/FloatingShapes";
-import { GridBackground } from "@/components/effects/GridBackground";
-import { HERO_STATS } from "@/data/stats";
+import { ArrowRight, CalendarClock, Sparkles } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { Chip } from "@/components/ui/chip";
+import { Modal } from "@/components/ui/modal";
+import {
+  SplitReveal,
+  MagneticHover,
+  ScrollCounter,
+} from "@/components/motion";
+import { HeroCanvas } from "@/components/3d/HeroCanvas";
+import { HERO_STATS } from "@/constants/stats";
+import { CTA_HREF } from "@/constants/nav";
+import { useClickOrigin } from "@/hooks/useClickOrigin";
+import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const { origin, capture, clear } = useClickOrigin();
+  const reduce = usePrefersReducedMotion();
 
-  // GSAP handles the entrance timeline + parallax — reserved for the hero only.
   useEffect(() => {
+    if (reduce) return;
     const root = rootRef.current;
+    const card = cardRef.current;
     if (!root) return;
 
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const hasHover =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     const ctx = gsap.context(() => {
-      if (!reduce) {
-        const tl = gsap.timeline({
-          defaults: { ease: "power3.out" },
-        });
+      gsap
+        .timeline({ defaults: { ease: "power3.out" } })
+        .from("[data-hero='eyebrow']", { y: 14, opacity: 0, duration: 0.5 })
+        .from("[data-hero='sub']", { y: 14, opacity: 0, duration: 0.6 }, "-=0.1")
+        .from("[data-hero='ctas']", { y: 10, opacity: 0, duration: 0.5 }, "-=0.3")
+        .from(
+          "[data-hero='card']",
+          { y: 30, opacity: 0, duration: 1, scale: 0.96 },
+          "-=0.7",
+        )
+        .from(
+          "[data-hero='stat']",
+          { y: 12, opacity: 0, duration: 0.5, stagger: 0.07 },
+          "-=0.4",
+        );
 
-        tl.from("[data-hero='eyebrow']", { y: 16, opacity: 0, duration: 0.55 })
-          .from(
-            "[data-hero='title'] > span",
-            {
-              y: 28,
-              opacity: 0,
-              duration: 0.9,
-              stagger: 0.08,
-            },
-            "-=0.2",
-          )
-          .from(
-            "[data-hero='sub']",
-            { y: 14, opacity: 0, duration: 0.6 },
-            "-=0.5",
-          )
-          .from(
-            "[data-hero='ctas']",
-            { y: 10, opacity: 0, duration: 0.5 },
-            "-=0.4",
-          )
-          .from(
-            "[data-hero='stat']",
-            { y: 12, opacity: 0, duration: 0.5, stagger: 0.07 },
-            "-=0.3",
-          )
-          .from(
-            "[data-hero='orb']",
-            { scale: 0.9, opacity: 0, duration: 1.2 },
-            "-=0.9",
-          );
+      // Cinematic scroll scrub: the hero card recedes slightly as you scroll.
+      // Kept subtle — overdoing it reads as "empty space" below the hero.
+      if (card) {
+        gsap.to(card, {
+          y: -16,
+          scale: 0.98,
+          opacity: 0.85,
+          ease: "none",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 10%",
+            end: "bottom top+=100",
+            scrub: 0.6,
+          },
+        });
       }
-
-      // Subtle parallax on scroll — uses rAF internally via GSAP ticker.
-      const layers = gsap.utils.toArray<HTMLElement>(
-        "[data-parallax]",
-        root,
-      );
-      const onScroll = () => {
-        const y = window.scrollY;
-        layers.forEach((el) => {
-          const depth = Number(el.dataset.parallax) || 0.1;
-          gsap.to(el, {
-            y: y * depth,
-            duration: 0.6,
-            ease: "power2.out",
-            overwrite: "auto",
-          });
-        });
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-
-      return () => window.removeEventListener("scroll", onScroll);
     }, root);
 
-    return () => ctx.revert();
-  }, []);
+    // Tilt listeners live outside gsap.context so we can clean them up.
+    let removeTilt: (() => void) | undefined;
+    if (card && hasHover) {
+      const qx = gsap.quickTo(card, "rotationY", {
+        duration: 0.8,
+        ease: "power3.out",
+      });
+      const qy = gsap.quickTo(card, "rotationX", {
+        duration: 0.8,
+        ease: "power3.out",
+      });
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerType !== "mouse") return;
+        const rect = card.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width - 0.5;
+        const ny = (e.clientY - rect.top) / rect.height - 0.5;
+        qx(nx * 4);
+        qy(-ny * 4);
+      };
+      const onLeave = () => {
+        qx(0);
+        qy(0);
+      };
+      card.addEventListener("pointermove", onMove);
+      card.addEventListener("pointerleave", onLeave);
+      removeTilt = () => {
+        card.removeEventListener("pointermove", onMove);
+        card.removeEventListener("pointerleave", onLeave);
+      };
+    }
+
+    return () => {
+      removeTilt?.();
+      ctx.revert();
+    };
+  }, [reduce]);
+
+  const handleScheduleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    capture({ clientX: e.clientX, clientY: e.clientY });
+    setScheduleOpen(true);
+  };
 
   return (
     <section
       id="top"
       ref={rootRef}
-      className="relative isolate overflow-hidden pt-36 pb-24 sm:pt-40 lg:pt-48 lg:pb-32"
+      className="relative isolate overflow-hidden pt-36 pb-16 sm:pt-40 sm:pb-20 lg:pt-44 lg:pb-24"
       aria-labelledby="hero-title"
     >
-      <GridBackground withMesh />
-      <div data-parallax="-0.08">
-        <FloatingShapes />
+      {/* Premium backdrop — contained inside the section, pointer-through */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black_40%,transparent_100%)]">
+          <HeroCanvas />
+        </div>
       </div>
 
-      {/* Decorative orb */}
+      {/* Glow streaks */}
       <div
-        data-hero="orb"
-        data-parallax="0.12"
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[-10%] -z-10 h-[520px] w-[520px] -translate-x-1/2 rounded-full border border-white/5"
-        style={{
-          background:
-            "conic-gradient(from 180deg at 50% 50%, hsl(217 91% 60% / 0.25), hsl(262 83% 68% / 0.18), hsl(189 94% 60% / 0.18), hsl(217 91% 60% / 0.25))",
-          filter: "blur(40px)",
-          opacity: 0.6,
-        }}
-      />
+        className="pointer-events-none absolute inset-x-0 top-12 -z-10 flex justify-center"
+      >
+        <div
+          className="h-[520px] w-[900px] blur-3xl opacity-60"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(94,234,212,0.55) 0%, rgba(56,189,248,0.25) 35%, transparent 70%)",
+          }}
+        />
+      </div>
 
       <div className="container relative">
         <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <div data-hero="eyebrow">
-            <span className="chip">
+            <Chip>
               <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-              Now onboarding Series A–C engineering partners
-            </span>
+              Now onboarding engineering partners
+            </Chip>
           </div>
 
           <h1
             id="hero-title"
-            data-hero="title"
-            className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight text-balance sm:text-6xl lg:text-7xl"
+            className="mt-6 text-5xl font-semibold leading-[1.04] tracking-tight text-balance sm:text-6xl lg:text-7xl"
           >
-            <span className="block">We build engineering</span>
-            <span className="block gradient-text">teams that scale.</span>
+            <SplitReveal as="span" className="block" delay={0.15}>
+              Scale teams.
+            </SplitReveal>
+            <SplitReveal
+              as="span"
+              className="block"
+              textClassName="gradient-text"
+              delay={0.45}
+            >
+              Grow talent. Deliver.
+            </SplitReveal>
           </h1>
 
           <p
             data-hero="sub"
-            className="mt-6 max-w-2xl text-pretty text-base text-white/70 sm:text-lg"
+            className="mt-6 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg"
           >
-            Nexus connects top developers with ambitious products. Staff
-            augmentation, dedicated pods, and end-to-end delivery — with the
-            craft and transparency of an in-house team.
+            Nexus connects strong engineers with ambitious products. Staff
+            augmentation, dedicated teams, and end-to-end delivery — with a
+            growth ecosystem built for engineers.
           </p>
 
           <div
             data-hero="ctas"
-            className="mt-9 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
+            className="mt-9 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row sm:gap-5"
           >
             <a
-              href="#apply"
+              href={CTA_HREF}
               className={buttonVariants({
                 size: "lg",
                 className: "group w-full sm:w-auto",
@@ -152,42 +195,150 @@ export function Hero() {
               Apply as an engineer
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
-            <a
-              href="#services"
-              className={buttonVariants({
-                variant: "secondary",
-                size: "lg",
-                className: "w-full sm:w-auto",
-              })}
+            <Button
+              variant="glass"
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={handleScheduleClick}
             >
+              <CalendarClock className="h-4 w-4" />
               Hire a team
-            </a>
+            </Button>
           </div>
+        </div>
 
-          <motion.ul
-            className="mt-16 grid w-full max-w-4xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm sm:grid-cols-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.4 }}
+        {/* Hero glass card */}
+        <div
+          data-hero="card"
+          className="relative mx-auto mt-16 max-w-4xl"
+          style={{ perspective: "1200px" }}
+        >
+          <GlassCard
+            ref={cardRef}
+            intensity="strong"
+            padded={false}
+            interactive
+            className="rounded-3xl p-8 sm:p-10"
+            style={{ transformStyle: "preserve-3d" }}
           >
-            {HERO_STATS.map((s) => (
-              <li
-                key={s.label}
-                data-hero="stat"
-                className="relative bg-background/40 p-5 text-left"
-              >
-                <div className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                  {s.value}
-                </div>
-                <div className="mt-1 text-sm text-white/70">{s.label}</div>
-                {s.hint && (
-                  <div className="mt-0.5 text-xs text-white/40">{s.hint}</div>
-                )}
-              </li>
-            ))}
-          </motion.ul>
+            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <Chip>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                  Open to new engagements
+                </Chip>
+                <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Engineering, delivered with craft.
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                  Match with a senior engineer in under a week, or spin up a
+                  full dedicated pod. Transparent pricing, honest timelines.
+                </p>
+              </div>
+              <MagneticHover>
+                <a
+                  href="#services"
+                  className={buttonVariants({
+                    variant: "outline",
+                    size: "sm",
+                    className: "group",
+                  })}
+                >
+                  Explore services
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              </MagneticHover>
+            </div>
+
+            <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/60 bg-white/40 sm:grid-cols-4">
+              {HERO_STATS.map((s) => (
+                <li
+                  key={s.label}
+                  data-hero="stat"
+                  className="bg-white/50 p-5 text-left backdrop-blur"
+                >
+                  <ScrollCounter
+                    value={s.value}
+                    className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+                  />
+                  <div className="mt-1 text-sm text-foreground/70">
+                    {s.label}
+                  </div>
+                  {s.hint && (
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {s.hint}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
+
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full blur-2xl"
+            style={{
+              background:
+                "radial-gradient(closest-side, rgba(251, 191, 36, 0.75), transparent 70%)",
+            }}
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute -right-8 -bottom-12 h-40 w-40 rounded-full blur-3xl"
+            style={{
+              background:
+                "radial-gradient(closest-side, rgba(94, 234, 212, 0.7), transparent 70%)",
+            }}
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
         </div>
       </div>
+
+      <Modal
+        open={scheduleOpen}
+        onClose={() => {
+          setScheduleOpen(false);
+          clear();
+        }}
+        origin={origin}
+        title="Book a discovery call"
+        description="A 30-minute intro with our engineering lead to scope your needs and sketch the right team shape."
+      >
+        <ul className="mt-2 space-y-2.5 text-sm text-foreground/80">
+          {[
+            "No pitch — just scoping and honest advice",
+            "Typical response within 1 business day",
+            "NDA on request",
+          ].map((t) => (
+            <li key={t} className="flex items-start gap-2">
+              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary" />
+              {t}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <a
+            href="mailto:hello@nexus.dev?subject=Discovery%20call"
+            className={buttonVariants({ size: "md", className: "flex-1" })}
+          >
+            Email our team
+          </a>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => {
+              setScheduleOpen(false);
+              clear();
+            }}
+            className="flex-1"
+          >
+            Maybe later
+          </Button>
+        </div>
+      </Modal>
     </section>
   );
 }

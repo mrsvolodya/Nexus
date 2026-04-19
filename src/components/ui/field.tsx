@@ -3,7 +3,7 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { Label } from "./label";
 
 type FieldProps = {
@@ -25,11 +25,7 @@ export function Field({
   className,
   children,
 }: FieldProps) {
-  const describedBy = error
-    ? `${id}-error`
-    : hint
-      ? `${id}-hint`
-      : undefined;
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>

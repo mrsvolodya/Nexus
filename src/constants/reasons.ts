@@ -1,48 +1,42 @@
 import {
   ShieldCheck,
-  Sparkles,
   Gauge,
+  Sparkles,
   GraduationCap,
   Languages,
   HeartHandshake,
-  type LucideIcon,
 } from "lucide-react";
+import type { Reason } from "@/types/content";
 
-export type Reason = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-};
-
-export const REASONS: Reason[] = [
+export const REASONS: readonly Reason[] = [
   {
-    title: "Curated talent, not a marketplace",
+    title: "A trusted engineering network",
     description:
       "Every engineer is interviewed by senior practitioners. We hire ~3% of who we meet and vouch for every placement.",
     icon: ShieldCheck,
   },
   {
-    title: "Ship in days, not months",
+    title: "Fast, frictionless collaboration",
     description:
       "Matching, onboarding and access in under a week. Most clients see first PRs merged within 10 business days.",
     icon: Gauge,
   },
   {
-    title: "Growth-first culture",
+    title: "Scalable hiring, on demand",
     description:
-      "We invest in our engineers — reviews, mentorship, conference budgets — so they invest in your product.",
+      "Grow or shrink your team in weeks. Roles, seniority, timezones — we shape the team to fit the moment.",
     icon: Sparkles,
   },
   {
-    title: "Structured learning tracks",
+    title: "Growth-focused environment",
     description:
-      "Internal curricula in system design, architecture and leadership keep teams sharp and aligned with industry standards.",
+      "Structured learning tracks, architecture reviews, mentorship. Engineers sharpen the craft, your product gets the upside.",
     icon: GraduationCap,
   },
   {
     title: "English-fluent communication",
     description:
-      "Business-level English is table stakes. Dedicated language coaching keeps async collaboration effortless.",
+      "Business-level English is table stakes. Dedicated coaching keeps async collaboration effortless.",
     icon: Languages,
   },
   {
@@ -51,4 +45,4 @@ export const REASONS: Reason[] = [
       "Low churn, transparent pricing, honest engineering. We optimize for the 3-year relationship, not the first invoice.",
     icon: HeartHandshake,
   },
-];
+] as const;

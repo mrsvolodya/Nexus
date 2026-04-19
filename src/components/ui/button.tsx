@@ -2,21 +2,23 @@
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 select-none",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 select-none",
   {
     variants: {
       variant: {
         primary:
-          "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_10px_30px_-12px_hsl(217_91%_60%/0.6)] hover:shadow-[0_14px_40px_-8px_hsl(217_91%_60%/0.8)] hover:-translate-y-0.5",
-        secondary:
-          "border border-white/10 bg-white/[0.04] text-white backdrop-blur-md hover:bg-white/[0.08] hover:border-white/20",
+          "text-white bg-gradient-to-br from-primary via-accent to-primary/90 shadow-glow-teal hover:shadow-[0_14px_40px_-8px_rgba(14,165,165,0.55)] hover:-translate-y-0.5",
+        warm:
+          "text-white bg-gradient-to-br from-warm to-brand-honey shadow-glow-amber hover:-translate-y-0.5",
+        glass:
+          "glass text-foreground hover:bg-white/70",
         ghost:
-          "text-white/70 hover:text-white hover:bg-white/5",
+          "text-foreground/70 hover:text-foreground hover:bg-foreground/[0.04]",
         outline:
-          "border border-border bg-transparent text-foreground hover:bg-muted/40",
+          "border border-border bg-white/30 text-foreground hover:bg-white/50 backdrop-blur",
       },
       size: {
         sm: "h-9 px-4 text-xs",
@@ -37,15 +39,13 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
-        {...props}
-      />
-    );
-  },
+  ({ className, variant, size, ...props }, ref) => (
+    <button
+      ref={ref}
+      className={cn(buttonVariants({ variant, size }), className)}
+      {...props}
+    />
+  ),
 );
 Button.displayName = "Button";
 

@@ -1,12 +1,6 @@
-export type Opportunity = {
-  role: string;
-  seniority: "Mid" | "Senior" | "Staff" | "Lead";
-  stack: string[];
-  location: string;
-  type: "Full-time" | "Contract";
-};
+import type { Opportunity } from "@/types/content";
 
-export const OPPORTUNITIES: Opportunity[] = [
+export const OPPORTUNITIES: readonly Opportunity[] = [
   {
     role: "Senior Frontend Engineer",
     seniority: "Senior",
@@ -49,4 +43,4 @@ export const OPPORTUNITIES: Opportunity[] = [
     location: "Remote · EU",
     type: "Full-time",
   },
-];
+] as const;
