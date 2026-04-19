@@ -5,8 +5,8 @@ import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Logo } from "@/components/brand/Logo";
 import { buttonVariants } from "@/components/ui/button";
-import { NAV_LINKS } from "@/data/nav";
-import { cn } from "@/lib/utils";
+import { NAV_LINKS, CTA_HREF } from "@/constants/nav";
+import { cn } from "@/utils/cn";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -32,19 +32,13 @@ export function Navbar() {
     >
       <div className="container">
         <nav
+          aria-label="Primary"
           className={cn(
             "relative flex items-center justify-between gap-6 rounded-full px-4 py-2.5 transition-all duration-500",
-            scrolled
-              ? "border border-white/10 bg-background/70 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl"
-              : "border border-transparent bg-transparent",
+            scrolled ? "glass shadow-glass-sm" : "border border-transparent",
           )}
-          aria-label="Primary"
         >
-          <a
-            href="#top"
-            className="flex items-center"
-            aria-label="Nexus — home"
-          >
+          <a href="#top" aria-label="Nexus — home" className="flex items-center">
             <Logo />
           </a>
 
@@ -53,7 +47,7 @@ export function Navbar() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="rounded-full px-3.5 py-2 text-sm text-white/70 transition-colors hover:text-white"
+                  className="rounded-full px-3.5 py-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
                 >
                   {link.label}
                 </a>
@@ -63,7 +57,7 @@ export function Navbar() {
 
           <div className="hidden md:block">
             <a
-              href="#apply"
+              href={CTA_HREF}
               className={buttonVariants({ size: "sm" })}
               aria-label="Apply to join Nexus"
             >
@@ -73,7 +67,7 @@ export function Navbar() {
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white md:hidden"
+            className="glass inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground md:hidden"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls="mobile-menu"
@@ -94,14 +88,14 @@ export function Navbar() {
             transition={{ duration: 0.2 }}
             className="container md:hidden"
           >
-            <div className="mt-2 rounded-3xl border border-white/10 bg-background/90 p-4 shadow-xl backdrop-blur-xl">
+            <div className="glass-strong mt-2 rounded-3xl p-4 shadow-glass-lg">
               <ul className="flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
                   <li key={link.href}>
                     <a
                       href={link.href}
                       onClick={() => setOpen(false)}
-                      className="block rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white"
+                      className="block rounded-xl px-4 py-3 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
                     >
                       {link.label}
                     </a>
@@ -110,9 +104,9 @@ export function Navbar() {
               </ul>
               <div className="mt-3 px-1">
                 <a
-                  href="#apply"
+                  href={CTA_HREF}
                   onClick={() => setOpen(false)}
-                  className={buttonVariants({ size: "md", className: "w-full" })}
+                  className={buttonVariants({ className: "w-full" })}
                 >
                   Join Nexus
                 </a>

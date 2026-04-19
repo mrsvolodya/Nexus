@@ -1,14 +1,16 @@
 "use client";
 
-import { motion, type Variants, useReducedMotion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import type { ReactNode } from "react";
+import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
+import { EASE_OUT, staggerParent, viewportOnce } from "@/utils/motion";
 
 type RevealProps = {
   children: ReactNode;
   delay?: number;
   y?: number;
   className?: string;
-  as?: "div" | "section" | "li" | "article" | "header";
+  as?: "div" | "section" | "li" | "article" | "header" | "span";
   once?: boolean;
   amount?: number;
 };
@@ -18,10 +20,7 @@ const buildVariants = (y: number): Variants => ({
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.7,
-      ease: [0.22, 1, 0.36, 1],
-    },
+    transition: { duration: 0.7, ease: EASE_OUT },
   },
 });
 
@@ -34,13 +33,10 @@ export function Reveal({
   once = true,
   amount = 0.2,
 }: RevealProps) {
-  const reduce = useReducedMotion();
+  const reduce = usePrefersReducedMotion();
   const MotionTag = motion[as];
 
-  if (reduce) {
-    // Render without motion wrapper variants for reduced-motion users.
-    return <MotionTag className={className}>{children}</MotionTag>;
-  }
+  if (reduce) return <MotionTag className={className}>{children}</MotionTag>;
 
   return (
     <MotionTag
@@ -60,8 +56,8 @@ export function RevealStagger({
   children,
   className,
   stagger = 0.08,
-  amount = 0.2,
-  once = true,
+  amount = viewportOnce.amount,
+  once = viewportOnce.once,
 }: {
   children: ReactNode;
   className?: string;
@@ -75,10 +71,7 @@ export function RevealStagger({
       initial="hidden"
       whileInView="visible"
       viewport={{ once, amount }}
-      variants={{
-        hidden: {},
-        visible: { transition: { staggerChildren: stagger } },
-      }}
+      variants={staggerParent(stagger)}
     >
       {children}
     </motion.div>
@@ -90,6 +83,6 @@ export const revealItem: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, ease: EASE_OUT },
   },
 };

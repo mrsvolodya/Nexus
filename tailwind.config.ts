@@ -38,16 +38,21 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        warm: {
+          DEFAULT: "hsl(var(--warm))",
+          foreground: "hsl(var(--warm-foreground))",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         brand: {
-          navy: "#05070D",
-          graphite: "#0B0F1A",
-          cyan: "#3DD6F5",
-          blue: "#3B82F6",
-          violet: "#7C5CFF",
+          teal: "#0EA5A5",
+          cyan: "#06B6D4",
+          aqua: "#5EEAD4",
+          sky: "#38BDF8",
+          amber: "#F59E0B",
+          honey: "#FBBF24",
         },
       },
       fontFamily: {
@@ -56,29 +61,37 @@ const config: Config = {
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
+        xl: "calc(var(--radius) + 4px)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        glow: "0 0 40px -10px hsl(var(--primary) / 0.35)",
-        "inner-ring":
-          "inset 0 0 0 1px hsl(var(--border)), 0 1px 0 hsl(0 0% 100% / 0.03)",
+        glass:
+          "0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 20px 40px -24px rgba(12, 74, 110, 0.25), 0 8px 20px -14px rgba(6, 95, 70, 0.15)",
+        "glass-sm":
+          "0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 12px 24px -18px rgba(12, 74, 110, 0.25)",
+        "glass-lg":
+          "0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 40px 80px -30px rgba(6, 78, 99, 0.3), 0 18px 40px -20px rgba(6, 95, 70, 0.2)",
+        "glow-teal":
+          "0 0 40px -8px rgba(14, 165, 165, 0.45)",
+        "glow-amber":
+          "0 0 40px -8px rgba(245, 158, 11, 0.45)",
       },
       backgroundImage: {
-        "grid-fade":
-          "radial-gradient(ellipse at top, hsl(var(--primary) / 0.12), transparent 60%)",
-        "mesh-1":
-          "radial-gradient(at 20% 10%, hsl(217 91% 60% / 0.18) 0, transparent 50%), radial-gradient(at 80% 0%, hsl(262 83% 68% / 0.18) 0, transparent 50%), radial-gradient(at 100% 80%, hsl(189 94% 60% / 0.12) 0, transparent 50%)",
+        "aurora":
+          "radial-gradient(at 12% 8%, hsl(var(--primary) / 0.18) 0, transparent 45%), radial-gradient(at 88% 12%, hsl(var(--warm) / 0.20) 0, transparent 48%), radial-gradient(at 68% 86%, hsl(var(--accent) / 0.18) 0, transparent 55%), radial-gradient(at 10% 90%, hsl(var(--primary) / 0.10) 0, transparent 50%)",
+        "ring-conic":
+          "conic-gradient(from 180deg at 50% 50%, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.25), hsl(var(--warm) / 0.25), hsl(var(--primary) / 0.25))",
       },
       keyframes: {
         "fade-up": {
           "0%": { opacity: "0", transform: "translateY(14px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
+        "aurora-drift": {
+          "0%, 100%": { transform: "translate3d(0,0,0) scale(1)" },
+          "50%": { transform: "translate3d(1%, -2%, 0) scale(1.03)" },
         },
         float: {
           "0%,100%": { transform: "translateY(0)" },
@@ -87,8 +100,8 @@ const config: Config = {
       },
       animation: {
         "fade-up": "fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
-        shimmer: "shimmer 6s linear infinite",
-        float: "float 6s ease-in-out infinite",
+        "aurora-drift": "aurora-drift 22s ease-in-out infinite",
+        float: "float 8s ease-in-out infinite",
       },
     },
   },
