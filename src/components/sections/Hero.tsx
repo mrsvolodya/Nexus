@@ -14,7 +14,7 @@ import {
   MagneticHover,
   ScrollCounter,
 } from "@/components/motion";
-import { NetworkGraph, BlueprintGrid } from "@/components/visual-system";
+import { BlueprintGrid } from "@/components/visual-system";
 import { HERO_STATS } from "@/constants/stats";
 import { CTA_HREF } from "@/constants/nav";
 import { useClickOrigin } from "@/hooks/useClickOrigin";
@@ -125,10 +125,9 @@ export function Hero() {
       className="relative isolate overflow-hidden pt-36 pb-16 sm:pt-40 sm:pb-20 lg:pt-44 lg:pb-24"
       aria-labelledby="hero-title"
     >
-      {/* Engineering-network visual system — pointer-through, under content */}
+      {/* Ambient backdrop — only a whisper-grid, no literal nodes. */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <BlueprintGrid />
-        <NetworkGraph />
       </div>
 
       {/* Glow streaks */}

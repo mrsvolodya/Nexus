@@ -70,7 +70,7 @@ export function Opportunities() {
                 </div>
                 <span
                   aria-hidden
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/60 bg-white/70 text-foreground/60 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-primary/40 group-hover:text-foreground"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/60 bg-white/70 text-foreground/60 transition-all duration-300 group-hover:translate-x-1 group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary"
                 >
                   <ArrowRight className="h-4 w-4" />
                 </span>

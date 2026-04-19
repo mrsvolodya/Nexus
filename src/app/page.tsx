@@ -7,6 +7,7 @@ import { WhyNexus } from "@/components/sections/WhyNexus";
 import { Ecosystem } from "@/components/sections/Ecosystem";
 import { EnglishCourses } from "@/components/sections/EnglishCourses";
 import { Opportunities } from "@/components/sections/Opportunities";
+import { DailySignal } from "@/components/sections/DailySignal";
 import { ApplicationForm } from "@/components/sections/ApplicationForm";
 import { CursorGlow } from "@/components/shared/CursorGlow";
 import { ScrollProgress } from "@/components/motion";
@@ -25,6 +26,7 @@ export default function HomePage() {
         <Ecosystem />
         <EnglishCourses />
         <Opportunities />
+        <DailySignal />
         <ApplicationForm />
       </main>
       <Footer />

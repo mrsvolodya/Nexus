@@ -97,11 +97,16 @@ const config: Config = {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-12px)" },
         },
+        marquee: {
+          from: { transform: "translate3d(0,0,0)" },
+          to: { transform: "translate3d(-50%,0,0)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
         "aurora-drift": "aurora-drift 22s ease-in-out infinite",
         float: "float 8s ease-in-out infinite",
+        marquee: "marquee 80s linear infinite",
       },
     },
   },

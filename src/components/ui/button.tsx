@@ -10,16 +10,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Premium CTA: halo intensifies + gradient sweeps (no vertical lift).
         primary:
-          "btn-halo text-white bg-gradient-to-br from-primary via-accent to-primary/90 shadow-glow-teal hover:shadow-[0_18px_46px_-10px_rgba(14,165,165,0.6)] hover:-translate-y-0.5",
+          "btn-halo btn-gradient-shift text-white bg-gradient-to-br from-primary via-accent to-primary/90 bg-[length:200%_200%] shadow-glow-teal hover:shadow-[0_18px_46px_-10px_rgba(14,165,165,0.6)]",
         warm:
-          "btn-halo text-white bg-gradient-to-br from-warm to-brand-honey shadow-glow-amber hover:-translate-y-0.5",
+          "btn-halo text-white bg-gradient-to-br from-warm to-brand-honey shadow-glow-amber",
+        // Glass: inner border illumination + slight saturation lift.
         glass:
-          "glass text-foreground hover:bg-white/75 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glass-sm",
+          "glass text-foreground hover:bg-white/75 hover:border-primary/35 hover:shadow-[inset_0_0_0_1px_hsl(183_74%_45%_/_0.18),0_8px_24px_-14px_rgba(14,165,165,0.35)]",
         ghost:
-          "text-foreground/70 hover:text-foreground hover:bg-foreground/[0.04]",
+          "text-foreground/70 hover:text-foreground hover:bg-foreground/[0.06]",
         outline:
-          "border border-border bg-white/30 text-foreground hover:bg-white/55 hover:border-primary/30 backdrop-blur hover:-translate-y-0.5",
+          "border border-border bg-white/30 text-foreground hover:bg-white/55 hover:border-primary/35 hover:shadow-[inset_0_0_0_1px_hsl(183_74%_45%_/_0.18)] backdrop-blur",
       },
       size: {
         sm: "h-9 px-4 text-xs",
