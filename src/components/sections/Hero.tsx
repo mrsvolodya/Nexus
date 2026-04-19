@@ -14,7 +14,7 @@ import {
   MagneticHover,
   ScrollCounter,
 } from "@/components/motion";
-import { HeroCanvas } from "@/components/3d/HeroCanvas";
+import { NetworkGraph, BlueprintGrid } from "@/components/visual-system";
 import { HERO_STATS } from "@/constants/stats";
 import { CTA_HREF } from "@/constants/nav";
 import { useClickOrigin } from "@/hooks/useClickOrigin";
@@ -125,11 +125,10 @@ export function Hero() {
       className="relative isolate overflow-hidden pt-36 pb-16 sm:pt-40 sm:pb-20 lg:pt-44 lg:pb-24"
       aria-labelledby="hero-title"
     >
-      {/* Premium backdrop — contained inside the section, pointer-through */}
+      {/* Engineering-network visual system — pointer-through, under content */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black_40%,transparent_100%)]">
-          <HeroCanvas />
-        </div>
+        <BlueprintGrid />
+        <NetworkGraph />
       </div>
 
       {/* Glow streaks */}

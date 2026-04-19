@@ -255,6 +255,58 @@
   .tilt-card [data-depth] {
     transform: translateZ(calc(var(--depth, 0) * 1px));
   }
+
+  /* ── Button shine sweep ───────────────────────────────────────────── */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.32) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .btn-shine:hover::after {
+    transform: translateX(120%);
+  }
+  .btn-shine > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Pulsing halo behind primary CTAs (used sparingly). */
+  .btn-halo {
+    position: relative;
+  }
+  .btn-halo::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      hsl(var(--primary) / 0.7),
+      hsl(var(--accent) / 0.6)
+    );
+    filter: blur(16px);
+    opacity: 0;
+    transition: opacity 400ms ease;
+    z-index: -1;
+  }
+  .btn-halo:hover::before {
+    opacity: 0.65;
+  }
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────── */

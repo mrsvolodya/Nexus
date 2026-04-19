@@ -9,7 +9,6 @@ import { EnglishCourses } from "@/components/sections/EnglishCourses";
 import { Opportunities } from "@/components/sections/Opportunities";
 import { ApplicationForm } from "@/components/sections/ApplicationForm";
 import { CursorGlow } from "@/components/shared/CursorGlow";
-import { SectionConnector } from "@/components/shared/SectionConnector";
 import { ScrollProgress } from "@/components/motion";
 
 export default function HomePage() {
@@ -22,15 +21,10 @@ export default function HomePage() {
         <Hero />
         <TechMarquee />
         <Services />
-        <SectionConnector />
         <WhyNexus />
-        <SectionConnector />
         <Ecosystem />
-        <SectionConnector />
         <EnglishCourses />
-        <SectionConnector />
         <Opportunities />
-        <SectionConnector />
         <ApplicationForm />
       </main>
       <Footer />

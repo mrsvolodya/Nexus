@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/utils/cn";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 select-none",
+  "btn-shine relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 select-none",
   {
     variants: {
       variant: {
         primary:
-          "text-white bg-gradient-to-br from-primary via-accent to-primary/90 shadow-glow-teal hover:shadow-[0_14px_40px_-8px_rgba(14,165,165,0.55)] hover:-translate-y-0.5",
+          "btn-halo text-white bg-gradient-to-br from-primary via-accent to-primary/90 shadow-glow-teal hover:shadow-[0_18px_46px_-10px_rgba(14,165,165,0.6)] hover:-translate-y-0.5",
         warm:
-          "text-white bg-gradient-to-br from-warm to-brand-honey shadow-glow-amber hover:-translate-y-0.5",
+          "btn-halo text-white bg-gradient-to-br from-warm to-brand-honey shadow-glow-amber hover:-translate-y-0.5",
         glass:
-          "glass text-foreground hover:bg-white/70",
+          "glass text-foreground hover:bg-white/75 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-glass-sm",
         ghost:
           "text-foreground/70 hover:text-foreground hover:bg-foreground/[0.04]",
         outline:
-          "border border-border bg-white/30 text-foreground hover:bg-white/50 backdrop-blur",
+          "border border-border bg-white/30 text-foreground hover:bg-white/55 hover:border-primary/30 backdrop-blur hover:-translate-y-0.5",
       },
       size: {
         sm: "h-9 px-4 text-xs",
