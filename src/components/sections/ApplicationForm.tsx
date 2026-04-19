@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "motion/react";
 import {
   CheckCircle2,
   FileText,
+  Info,
   Loader2,
   Sparkles,
   Upload,
@@ -21,6 +22,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { CornerBrackets } from "@/components/visual-system";
 import { applicationSchema, type ApplicationInput } from "@/lib/schemas";
 import {
   ROLES,
@@ -30,6 +32,8 @@ import {
 } from "@/constants/options";
 import { cn } from "@/utils/cn";
 import { formatBytes } from "@/utils/format";
+import { useChallenge } from "@/hooks/useChallenge";
+import { summarizeChallenge, formatDuration } from "@/utils/challenge";
 
 export function ApplicationForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -49,14 +53,23 @@ export function ApplicationForm() {
   const motivationValue = watch("motivation") ?? "";
   const cvFileList = watch("cv");
   const cvFile = cvFileList && cvFileList.length > 0 ? cvFileList[0] : null;
+  const attachChallenge = watch("attachChallenge") ?? false;
+
+  // Read-only view of today's challenge progress; used to build the
+  // transparent opt-in block and the attached summary on submit.
+  const { store, hydrated } = useChallenge();
+  const summary = useMemo(() => summarizeChallenge(store), [store]);
 
   const onSubmit = async (values: ApplicationInput) => {
     await new Promise((r) => setTimeout(r, 900));
-    // eslint-disable-next-line no-console
-    console.log("[Nexus] application submitted:", {
+    // Only include the challenge payload when the user explicitly opted in.
+    const payload = {
       ...values,
       cv: cvFile ? { name: cvFile.name, size: cvFile.size } : null,
-    });
+      challenge: values.attachChallenge ? summary : null,
+    };
+    // eslint-disable-next-line no-console
+    console.log("[Nexus] application submitted:", payload);
     setSubmitted(true);
     reset();
   };
@@ -93,7 +106,12 @@ export function ApplicationForm() {
       </div>
 
       <Reveal delay={0.1} className="mx-auto mt-14 max-w-4xl">
-        <GlassCard intensity="strong" padded={false} className="rounded-3xl p-6 sm:p-10">
+        <GlassCard
+          intensity="strong"
+          padded={false}
+          className="relative rounded-3xl p-6 sm:p-10"
+        >
+          <CornerBrackets />
           <AnimatePresence mode="wait">
             {submitted ? (
               <SuccessState key="success" onReset={() => setSubmitted(false)} />
@@ -205,6 +223,16 @@ export function ApplicationForm() {
                     {...register("motivation")}
                   />
                 </Field>
+
+                {hydrated && summary && (
+                  <div className="sm:col-span-2">
+                    <ChallengeAttachBlock
+                      summary={summary}
+                      checked={attachChallenge}
+                      register={register("attachChallenge")}
+                    />
+                  </div>
+                )}
 
                 <div className="sm:col-span-2">
                   <label className="flex items-start gap-3 rounded-xl border border-white/60 bg-white/60 p-4 text-sm text-foreground/80 backdrop-blur">
@@ -363,6 +391,72 @@ function CvUpload({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function ChallengeAttachBlock({
+  summary,
+  checked,
+  register,
+}: {
+  summary: NonNullable<ReturnType<typeof summarizeChallenge>>;
+  checked: boolean;
+  register: UseFormRegisterReturn;
+}) {
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-4 text-sm text-foreground/80 backdrop-blur">
+      <label className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-white text-primary focus:ring-ring/60"
+          {...register}
+        />
+        <div className="flex-1">
+          <span className="font-medium text-foreground">
+            Attach my Daily Signal results to this application
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              (optional)
+            </span>
+          </span>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Nothing is sent unless you tick this box. If ticked, a short
+            summary of today&apos;s puzzle progress — moves, time, and
+            whether you hit the optimal path — is included alongside the
+            rest of your application. We do not use it as an assessment.
+          </p>
+
+          {checked && (
+            <div
+              className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-white/70 bg-white/60 p-3 text-xs font-mono text-foreground/75"
+              role="region"
+              aria-label="Preview of attached data"
+            >
+              <span className="text-muted-foreground">Date</span>
+              <span>{summary.dateSeed}</span>
+              <span className="text-muted-foreground">Challenges solved</span>
+              <span>
+                {summary.completedCount} / {summary.challengeCount}
+              </span>
+              <span className="text-muted-foreground">Total attempts</span>
+              <span>{summary.totalAttempts}</span>
+              <span className="text-muted-foreground">Total time</span>
+              <span>{formatDuration(summary.totalTimeMs)}</span>
+              <span className="text-muted-foreground">Streak</span>
+              <span>{summary.currentStreak}</span>
+            </div>
+          )}
+
+          <p className="mt-2 inline-flex items-start gap-1.5 text-[11px] text-muted-foreground">
+            <Info className="mt-0.5 h-3 w-3 flex-none" aria-hidden />
+            Stored locally on your device in localStorage as
+            <code className="mx-1 rounded bg-white/60 px-1 py-0.5 text-[10px]">
+              nexus:daily-signal
+            </code>
+            . You can clear it any time from browser settings.
+          </p>
+        </div>
+      </label>
     </div>
   );
 }

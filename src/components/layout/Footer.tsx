@@ -14,7 +14,8 @@ export function Footer() {
   return (
     <footer className="relative">
       <div className="container">
-        <div className="glass rounded-t-3xl px-6 py-12 sm:px-10 lg:px-14">
+        <div className="glass relative overflow-hidden rounded-t-3xl px-6 py-12 sm:px-10 lg:px-14">
+          <span aria-hidden className="footer-sweep" />
           <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
             <div>
               <Logo />

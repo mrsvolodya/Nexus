@@ -47,7 +47,7 @@ export function Navbar() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="rounded-full px-3.5 py-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
+                  className="nav-link px-3.5 py-2 text-sm text-foreground/70"
                 >
                   {link.label}
                 </a>
@@ -58,7 +58,10 @@ export function Navbar() {
           <div className="hidden md:block">
             <a
               href={CTA_HREF}
-              className={buttonVariants({ size: "sm" })}
+              className={buttonVariants({
+                size: "sm",
+                className: "btn-join",
+              })}
               aria-label="Apply to join Nexus"
             >
               Join Nexus

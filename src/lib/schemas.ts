@@ -80,6 +80,8 @@ export const applicationSchema = z.object({
   consent: z.literal(true, {
     errorMap: () => ({ message: "Please consent to proceed" }),
   }),
+  /** Optional, explicit opt-in to attach Daily Signal results. */
+  attachChallenge: z.boolean().optional().default(false),
 });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;
