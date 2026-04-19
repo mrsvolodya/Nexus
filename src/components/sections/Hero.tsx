@@ -14,7 +14,7 @@ import {
   MagneticHover,
   ScrollCounter,
 } from "@/components/motion";
-import { HeroCanvas } from "@/components/3d/HeroCanvas";
+import { NetworkGraph, BlueprintGrid } from "@/components/visual-system";
 import { HERO_STATS } from "@/constants/stats";
 import { CTA_HREF } from "@/constants/nav";
 import { useClickOrigin } from "@/hooks/useClickOrigin";
@@ -125,11 +125,10 @@ export function Hero() {
       className="relative isolate overflow-hidden pt-36 pb-16 sm:pt-40 sm:pb-20 lg:pt-44 lg:pb-24"
       aria-labelledby="hero-title"
     >
-      {/* Premium backdrop — contained inside the section, pointer-through */}
+      {/* Engineering-network visual system — pointer-through, under content */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black_40%,transparent_100%)]">
-          <HeroCanvas />
-        </div>
+        <BlueprintGrid />
+        <NetworkGraph />
       </div>
 
       {/* Glow streaks */}
@@ -148,11 +147,24 @@ export function Hero() {
 
       <div className="container relative">
         <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-          <div data-hero="eyebrow">
-            <Chip>
-              <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
+          <div
+            data-hero="eyebrow"
+            className="inline-flex items-center gap-3 glass rounded-full py-1.5 pl-2 pr-4 shadow-glass-sm"
+          >
+            <span className="relative grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-primary to-accent">
+              <Sparkles className="h-3 w-3 text-white" aria-hidden />
+              <span
+                aria-hidden
+                className="absolute inset-0 rounded-full ring-2 ring-primary/40 animate-ping"
+              />
+            </span>
+            <span className="font-mono text-[11px] tracking-[0.22em] uppercase text-foreground/70">
+              Nexus Labs
+            </span>
+            <span aria-hidden className="h-3 w-px bg-border" />
+            <span className="text-sm font-medium text-foreground">
               Now onboarding engineering partners
-            </Chip>
+            </span>
           </div>
 
           <h1
