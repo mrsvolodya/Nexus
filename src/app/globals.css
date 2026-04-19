@@ -285,6 +285,87 @@
     z-index: 2;
   }
 
+  /* Architectural corner brackets — used to frame the form card. */
+  .corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid hsl(var(--primary) / 0.35);
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  .corner-tl {
+    top: 10px;
+    left: 10px;
+    border-right: 0;
+    border-bottom: 0;
+    border-top-left-radius: 6px;
+  }
+  .corner-tr {
+    top: 10px;
+    right: 10px;
+    border-left: 0;
+    border-bottom: 0;
+    border-top-right-radius: 6px;
+  }
+  .corner-bl {
+    bottom: 10px;
+    left: 10px;
+    border-right: 0;
+    border-top: 0;
+    border-bottom-left-radius: 6px;
+  }
+  .corner-br {
+    bottom: 10px;
+    right: 10px;
+    border-left: 0;
+    border-top: 0;
+    border-bottom-right-radius: 6px;
+  }
+
+  /* Footer signal-line accent — slow gradient sweep across the top. */
+  .footer-sweep {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.5) 30%,
+      hsl(var(--accent) / 0.6) 50%,
+      hsl(var(--primary) / 0.5) 70%,
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: footer-sweep 9s linear infinite;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  @keyframes footer-sweep {
+    from { background-position: -100% 0; }
+    to { background-position: 100% 0; }
+  }
+
+  /* Click ripple — spawned by useRipple into Button. */
+  .btn-ripple {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.4);
+    animation: btn-ripple 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes btn-ripple {
+    to {
+      width: 420px;
+      height: 420px;
+      opacity: 0;
+    }
+  }
+
   /* Pulsing halo behind primary CTAs (used sparingly). */
   .btn-halo {
     position: relative;

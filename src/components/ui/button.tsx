@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/utils/cn";
+import { useRipple } from "@/hooks/useRipple";
 
 const buttonVariants = cva(
   "btn-shine relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 select-none",
@@ -36,16 +37,29 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  /** Disable the click ripple (default: on). */
+  ripple?: boolean;
+}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => (
-    <button
-      ref={ref}
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  ),
+  (
+    { className, variant, size, ripple = true, onClick, ...props },
+    ref,
+  ) => {
+    const spawn = useRipple<HTMLButtonElement>();
+    return (
+      <button
+        ref={ref}
+        className={cn(buttonVariants({ variant, size }), className)}
+        onClick={(e) => {
+          if (ripple) spawn(e);
+          onClick?.(e);
+        }}
+        {...props}
+      />
+    );
+  },
 );
 Button.displayName = "Button";
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { AnimatePresence, motion } from "motion/react";
 import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
 
 if (typeof window !== "undefined") {
@@ -13,62 +14,43 @@ type GraphNode = {
   id: string;
   x: number;
   y: number;
-  size?: number;
+  /** Can be clicked — triggers an expanding pulse wave. */
+  interactive?: boolean;
 };
 
-type GraphEdge = {
-  a: string;
-  b: string;
-};
+type GraphEdge = { a: string; b: string };
+
+type Pulse = { key: number; x: number; y: number };
 
 /**
- * Engineering-network hero visualization.
+ * Engineering-network accent system — deliberately sparse.
  *
- * An SVG graph of nodes connected by thin lines, with signals occasionally
- * traveling along edges. Replaces the generic floating-orb decoration with
- * a visual that communicates connection, scale and systems thinking.
+ * Two small corner clusters + two solo accent points, rather than a
+ * full-screen web. The solo points are `interactive`: clicking them
+ * radiates a pulse wave through the SVG. Everything else is ambient.
  *
  * Performance:
- *  - SVG-only (no canvas, no WebGL).
- *  - GSAP `matchMedia` splits desktop/mobile: mobile gets a one-shot draw-in,
- *    desktop gets continuous pulses + signal traffic.
- *  - ScrollTrigger disables the animation when the hero is off-screen.
- *  - Reduced-motion preference: render the graph statically.
+ *   - Pure SVG, zero canvas/WebGL.
+ *   - GSAP `matchMedia` disables the continuous signal interval on mobile.
+ *   - ScrollTrigger pauses node pulses when the hero leaves viewport.
+ *   - Respects `prefers-reduced-motion`.
  */
 
 const NODES: readonly GraphNode[] = [
-  { id: "n1", x: 14, y: 18, size: 1.4 },
-  { id: "n2", x: 32, y: 10, size: 1 },
-  { id: "n3", x: 50, y: 22, size: 1.6 },
-  { id: "n4", x: 66, y: 12, size: 1 },
-  { id: "n5", x: 84, y: 20, size: 1.2 },
-  { id: "n6", x: 22, y: 38, size: 1 },
-  { id: "n7", x: 40, y: 44, size: 1.4 },
-  { id: "n8", x: 58, y: 36, size: 1 },
-  { id: "n9", x: 72, y: 46, size: 1.2 },
-  { id: "n10", x: 88, y: 38, size: 1 },
-  { id: "n11", x: 12, y: 50, size: 1 },
-  { id: "n12", x: 50, y: 56, size: 1.4 },
+  // Top-left cluster
+  { id: "tl1", x: 6, y: 14 },
+  { id: "tl2", x: 14, y: 22 },
+  // Bottom-right cluster
+  { id: "br1", x: 88, y: 50 },
+  { id: "br2", x: 94, y: 56 },
+  // Solo accents — interactive hotspots
+  { id: "tr", x: 92, y: 12, interactive: true },
+  { id: "bl", x: 6, y: 58, interactive: true },
 ] as const;
 
 const EDGES: readonly GraphEdge[] = [
-  { a: "n1", b: "n2" },
-  { a: "n1", b: "n3" },
-  { a: "n2", b: "n3" },
-  { a: "n3", b: "n4" },
-  { a: "n4", b: "n5" },
-  { a: "n1", b: "n6" },
-  { a: "n6", b: "n7" },
-  { a: "n7", b: "n8" },
-  { a: "n8", b: "n9" },
-  { a: "n9", b: "n10" },
-  { a: "n5", b: "n10" },
-  { a: "n3", b: "n7" },
-  { a: "n3", b: "n8" },
-  { a: "n6", b: "n11" },
-  { a: "n11", b: "n7" },
-  { a: "n7", b: "n12" },
-  { a: "n12", b: "n9" },
+  { a: "tl1", b: "tl2" },
+  { a: "br1", b: "br2" },
 ] as const;
 
 const byId = (id: string) => NODES.find((n) => n.id === id)!;
@@ -76,6 +58,7 @@ const byId = (id: string) => NODES.find((n) => n.id === id)!;
 export function NetworkGraph() {
   const rootRef = useRef<SVGSVGElement>(null);
   const reduce = usePrefersReducedMotion();
+  const [pulses, setPulses] = useState<Pulse[]>([]);
 
   useEffect(() => {
     if (reduce) return;
@@ -84,8 +67,7 @@ export function NetworkGraph() {
 
     const mm = gsap.matchMedia();
 
-    // Shared: entry draw-in for every edge.
-    const drawEdges = (duration = 1.4, perEdgeDelay = 0.05) => {
+    const drawEdges = (duration = 1.4, perEdgeDelay = 0.12) => {
       const edges = root.querySelectorAll<SVGLineElement>("[data-edge]");
       edges.forEach((edge, i) => {
         const len = edge.getTotalLength();
@@ -100,28 +82,26 @@ export function NetworkGraph() {
       });
     };
 
-    // Desktop: richer loop — node pulse + signal traffic. Paused when
-    // the hero leaves the viewport.
     mm.add("(min-width: 768px)", () => {
       const ctx = gsap.context(() => {
         drawEdges();
 
-        const nodes = root.querySelectorAll<SVGCircleElement>(
+        const glows = root.querySelectorAll<SVGCircleElement>(
           "[data-node-glow]",
         );
-        const pulseTween = gsap.to(nodes, {
-          opacity: () => 0.35 + Math.random() * 0.5,
+        const pulseTween = gsap.to(glows, {
+          opacity: () => 0.3 + Math.random() * 0.4,
           scale: () => 0.9 + Math.random() * 0.25,
           transformOrigin: "center center",
-          duration: 2.2,
-          stagger: { each: 0.25, repeat: -1, yoyo: true },
+          duration: 2.4,
+          stagger: { each: 0.4, repeat: -1, yoyo: true },
           ease: "sine.inOut",
         });
 
+        // Signal traffic — slower cadence since we have fewer edges.
         const edgeEls = Array.from(
           root.querySelectorAll<SVGLineElement>("[data-edge]"),
         );
-
         const signals: SVGCircleElement[] = [];
         const sendSignal = () => {
           if (edgeEls.length === 0) return;
@@ -130,7 +110,6 @@ export function NetworkGraph() {
           const y1 = Number(edge.getAttribute("y1"));
           const x2 = Number(edge.getAttribute("x2"));
           const y2 = Number(edge.getAttribute("y2"));
-
           const signal = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "circle",
@@ -139,14 +118,12 @@ export function NetworkGraph() {
           signal.setAttribute("cx", String(x1));
           signal.setAttribute("cy", String(y1));
           signal.setAttribute("fill", "hsl(189 94% 50%)");
-          signal.setAttribute("class", "drop-shadow");
           signal.style.filter = "drop-shadow(0 0 2px hsl(189 94% 60%))";
           root.appendChild(signal);
           signals.push(signal);
-
           gsap.to(signal, {
             attr: { cx: x2, cy: y2 },
-            duration: 1.1 + Math.random() * 0.6,
+            duration: 1.4 + Math.random() * 0.5,
             ease: "power1.inOut",
             onComplete: () => {
               signal.remove();
@@ -155,10 +132,8 @@ export function NetworkGraph() {
             },
           });
         };
+        const intv = window.setInterval(sendSignal, 3000);
 
-        const signalInterval = window.setInterval(sendSignal, 850);
-
-        // Pause animations when hero leaves viewport.
         const parent = root.parentElement;
         const trigger = parent
           ? ScrollTrigger.create({
@@ -173,25 +148,29 @@ export function NetworkGraph() {
           : null;
 
         return () => {
-          window.clearInterval(signalInterval);
+          window.clearInterval(intv);
           signals.forEach((s) => s.remove());
           trigger?.kill();
         };
       }, root);
-
       return () => ctx.revert();
     });
 
-    // Mobile / tablet: single draw-in, no continuous loops.
     mm.add("(max-width: 767px)", () => {
-      const ctx = gsap.context(() => {
-        drawEdges(1.1, 0.03);
-      }, root);
+      const ctx = gsap.context(() => drawEdges(1.1, 0.08), root);
       return () => ctx.revert();
     });
 
     return () => mm.revert();
   }, [reduce]);
+
+  const firePulse = (node: GraphNode) => {
+    if (reduce) return;
+    setPulses((p) => [
+      ...p,
+      { key: performance.now(), x: node.x, y: node.y },
+    ]);
+  };
 
   return (
     <svg
@@ -199,7 +178,8 @@ export function NetworkGraph() {
       aria-hidden
       viewBox="0 0 100 64"
       preserveAspectRatio="xMidYMid slice"
-      className="pointer-events-none absolute inset-0 h-full w-full"
+      className="absolute inset-0 h-full w-full"
+      style={{ pointerEvents: "none" }}
     >
       <defs>
         <linearGradient id="ng-edge" x1="0" y1="0" x2="1" y2="0">
@@ -212,12 +192,11 @@ export function NetworkGraph() {
           <stop offset="100%" stopColor="hsl(189 94% 45%)" stopOpacity="0" />
         </linearGradient>
         <radialGradient id="ng-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="hsl(183 74% 45%)" stopOpacity="0.8" />
+          <stop offset="0%" stopColor="hsl(183 74% 45%)" stopOpacity="0.75" />
           <stop offset="100%" stopColor="hsl(183 74% 45%)" stopOpacity="0" />
         </radialGradient>
       </defs>
 
-      {/* Edges */}
       {EDGES.map((e, i) => {
         const a = byId(e.a);
         const b = byId(e.b);
@@ -236,31 +215,72 @@ export function NetworkGraph() {
         );
       })}
 
-      {/* Node glows */}
       {NODES.map((n) => (
         <circle
           key={`glow-${n.id}`}
           data-node-glow
           cx={n.x}
           cy={n.y}
-          r={3 * (n.size ?? 1)}
+          r={3}
           fill="url(#ng-glow)"
-          opacity="0.55"
+          opacity="0.5"
         />
       ))}
 
-      {/* Nodes */}
       {NODES.map((n) => (
         <circle
           key={n.id}
           cx={n.x}
           cy={n.y}
-          r={0.6 * (n.size ?? 1)}
+          r={0.6}
           fill="white"
           stroke="hsl(183 74% 40%)"
           strokeWidth="0.18"
         />
       ))}
+
+      {/* Interactive hotspots — larger transparent hit area above the node */}
+      {NODES.filter((n) => n.interactive).map((n) => (
+        <circle
+          key={`hit-${n.id}`}
+          cx={n.x}
+          cy={n.y}
+          r={2.4}
+          fill="transparent"
+          style={{
+            pointerEvents: "auto",
+            cursor: "pointer",
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Trigger signal pulse"
+          onClick={() => firePulse(n)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") firePulse(n);
+          }}
+        />
+      ))}
+
+      {/* Click pulse waves */}
+      <AnimatePresence>
+        {pulses.map((p) => (
+          <motion.circle
+            key={p.key}
+            cx={p.x}
+            cy={p.y}
+            fill="transparent"
+            stroke="hsl(183 74% 50%)"
+            strokeWidth={0.2}
+            initial={{ r: 0.6, opacity: 0.85 }}
+            animate={{ r: 14, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() =>
+              setPulses((list) => list.filter((x) => x.key !== p.key))
+            }
+          />
+        ))}
+      </AnimatePresence>
     </svg>
   );
 }

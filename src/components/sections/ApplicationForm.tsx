@@ -21,6 +21,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { CornerBrackets } from "@/components/visual-system";
 import { applicationSchema, type ApplicationInput } from "@/lib/schemas";
 import {
   ROLES,
@@ -93,7 +94,12 @@ export function ApplicationForm() {
       </div>
 
       <Reveal delay={0.1} className="mx-auto mt-14 max-w-4xl">
-        <GlassCard intensity="strong" padded={false} className="rounded-3xl p-6 sm:p-10">
+        <GlassCard
+          intensity="strong"
+          padded={false}
+          className="relative rounded-3xl p-6 sm:p-10"
+        >
+          <CornerBrackets />
           <AnimatePresence mode="wait">
             {submitted ? (
               <SuccessState key="success" onReset={() => setSubmitted(false)} />
