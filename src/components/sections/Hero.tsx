@@ -8,18 +8,20 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Chip } from "@/components/ui/chip";
 import { Modal } from "@/components/ui/modal";
-import { FloatingOrbs } from "@/components/shared/FloatingOrbs";
+import { SplitReveal, MagneticHover } from "@/components/motion";
+import { HeroCanvas } from "@/components/3d/HeroCanvas";
 import { HERO_STATS } from "@/constants/stats";
 import { CTA_HREF } from "@/constants/nav";
+import { useClickOrigin } from "@/hooks/useClickOrigin";
 import { usePrefersReducedMotion } from "@/hooks/useMediaQuery";
 
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const { origin, capture, clear } = useClickOrigin();
   const reduce = usePrefersReducedMotion();
 
-  // GSAP: entrance timeline + parallax + cursor-reactive tilt on the hero card.
   useEffect(() => {
     if (reduce) return;
     const root = rootRef.current;
@@ -27,27 +29,15 @@ export function Hero() {
     if (!root) return;
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.from("[data-hero='eyebrow']", { y: 14, opacity: 0, duration: 0.5 })
-        .from(
-          "[data-hero='title'] > span",
-          { y: 28, opacity: 0, duration: 0.9, stagger: 0.08 },
-          "-=0.2",
-        )
-        .from(
-          "[data-hero='sub']",
-          { y: 14, opacity: 0, duration: 0.6 },
-          "-=0.5",
-        )
-        .from(
-          "[data-hero='ctas']",
-          { y: 10, opacity: 0, duration: 0.5 },
-          "-=0.4",
-        )
+      gsap
+        .timeline({ defaults: { ease: "power3.out" } })
+        .from("[data-hero='eyebrow']", { y: 14, opacity: 0, duration: 0.5 })
+        .from("[data-hero='sub']", { y: 14, opacity: 0, duration: 0.6 }, "-=0.1")
+        .from("[data-hero='ctas']", { y: 10, opacity: 0, duration: 0.5 }, "-=0.3")
         .from(
           "[data-hero='card']",
           { y: 30, opacity: 0, duration: 1, scale: 0.96 },
-          "-=0.8",
+          "-=0.7",
         )
         .from(
           "[data-hero='stat']",
@@ -55,27 +45,9 @@ export function Hero() {
           "-=0.4",
         );
 
-      // Parallax on scroll (orbs + decorative layers)
-      const layers = gsap.utils.toArray<HTMLElement>("[data-parallax]", root);
-      const onScroll = () => {
-        const y = window.scrollY;
-        layers.forEach((el) => {
-          const depth = Number(el.dataset.parallax) || 0.1;
-          gsap.to(el, {
-            y: y * depth,
-            duration: 0.6,
-            ease: "power2.out",
-            overwrite: "auto",
-          });
-        });
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-
-      // Tilt the hero card with cursor position
       if (card) {
         const qx = gsap.quickTo(card, "rotationY", { duration: 0.8, ease: "power3.out" });
         const qy = gsap.quickTo(card, "rotationX", { duration: 0.8, ease: "power3.out" });
-
         const onMove = (e: PointerEvent) => {
           const rect = card.getBoundingClientRect();
           const nx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -90,27 +62,46 @@ export function Hero() {
         card.addEventListener("pointermove", onMove);
         card.addEventListener("pointerleave", onLeave);
         return () => {
-          window.removeEventListener("scroll", onScroll);
           card.removeEventListener("pointermove", onMove);
           card.removeEventListener("pointerleave", onLeave);
         };
       }
-
-      return () => window.removeEventListener("scroll", onScroll);
     }, root);
 
     return () => ctx.revert();
   }, [reduce]);
 
+  const handleScheduleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    capture({ clientX: e.clientX, clientY: e.clientY });
+    setScheduleOpen(true);
+  };
+
   return (
     <section
       id="top"
       ref={rootRef}
-      className="relative isolate overflow-hidden pt-36 pb-24 sm:pt-40 lg:pt-48 lg:pb-32"
+      className="relative isolate overflow-hidden pt-36 pb-24 sm:pt-40 lg:pt-44 lg:pb-32"
       aria-labelledby="hero-title"
     >
-      <div data-parallax="-0.06">
-        <FloatingOrbs />
+      {/* 3D centerpiece — lives behind the content, pointer-through */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]">
+        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black_40%,transparent_100%)]">
+          <HeroCanvas />
+        </div>
+      </div>
+
+      {/* Glow streaks */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-12 -z-10 flex justify-center"
+      >
+        <div
+          className="h-[520px] w-[900px] blur-3xl opacity-60"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(94,234,212,0.55) 0%, rgba(56,189,248,0.25) 35%, transparent 70%)",
+          }}
+        />
       </div>
 
       <div className="container relative">
@@ -124,11 +115,14 @@ export function Hero() {
 
           <h1
             id="hero-title"
-            data-hero="title"
             className="mt-6 text-5xl font-semibold leading-[1.04] tracking-tight text-balance sm:text-6xl lg:text-7xl"
           >
-            <span className="block">Scale teams.</span>
-            <span className="block gradient-text">Grow talent. Deliver.</span>
+            <SplitReveal as="span" className="block" delay={0.15}>
+              Scale teams.
+            </SplitReveal>
+            <SplitReveal as="span" className="block gradient-text" delay={0.45}>
+              Grow talent. Deliver.
+            </SplitReveal>
           </h1>
 
           <p
@@ -144,29 +138,33 @@ export function Hero() {
             data-hero="ctas"
             className="mt-9 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
           >
-            <a
-              href={CTA_HREF}
-              className={buttonVariants({
-                size: "lg",
-                className: "group w-full sm:w-auto",
-              })}
-            >
-              Apply as an engineer
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
-            <Button
-              variant="glass"
-              size="lg"
-              className="w-full sm:w-auto"
-              onClick={() => setScheduleOpen(true)}
-            >
-              <CalendarClock className="h-4 w-4" />
-              Hire a team
-            </Button>
+            <MagneticHover strength={0.3}>
+              <a
+                href={CTA_HREF}
+                className={buttonVariants({
+                  size: "lg",
+                  className: "group w-full sm:w-auto",
+                })}
+              >
+                Apply as an engineer
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </MagneticHover>
+            <MagneticHover strength={0.25}>
+              <Button
+                variant="glass"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={handleScheduleClick}
+              >
+                <CalendarClock className="h-4 w-4" />
+                Hire a team
+              </Button>
+            </MagneticHover>
           </div>
         </div>
 
-        {/* Hero glass card — floating, tilted by cursor */}
+        {/* Hero glass card */}
         <div
           data-hero="card"
           className="relative mx-auto mt-16 max-w-4xl"
@@ -194,17 +192,19 @@ export function Hero() {
                   full dedicated pod. Transparent pricing, honest timelines.
                 </p>
               </div>
-              <a
-                href="#services"
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "sm",
-                  className: "group",
-                })}
-              >
-                Explore services
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </a>
+              <MagneticHover>
+                <a
+                  href="#services"
+                  className={buttonVariants({
+                    variant: "outline",
+                    size: "sm",
+                    className: "group",
+                  })}
+                >
+                  Explore services
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              </MagneticHover>
             </div>
 
             <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/60 bg-white/40 sm:grid-cols-4">
@@ -230,10 +230,8 @@ export function Hero() {
             </ul>
           </GlassCard>
 
-          {/* Orb accents behind the card */}
           <motion.span
             aria-hidden
-            data-parallax="0.08"
             className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full blur-2xl"
             style={{
               background:
@@ -244,7 +242,6 @@ export function Hero() {
           />
           <motion.span
             aria-hidden
-            data-parallax="0.12"
             className="pointer-events-none absolute -right-8 -bottom-12 h-40 w-40 rounded-full blur-3xl"
             style={{
               background:
@@ -258,9 +255,13 @@ export function Hero() {
 
       <Modal
         open={scheduleOpen}
-        onClose={() => setScheduleOpen(false)}
+        onClose={() => {
+          setScheduleOpen(false);
+          clear();
+        }}
+        origin={origin}
         title="Book a discovery call"
-        description="A 30-minute intro with our engineering lead to understand your needs and map out a team shape that fits."
+        description="A 30-minute intro with our engineering lead to scope your needs and sketch the right team shape."
       >
         <ul className="mt-2 space-y-2.5 text-sm text-foreground/80">
           {[
@@ -284,7 +285,10 @@ export function Hero() {
           <Button
             variant="outline"
             size="md"
-            onClick={() => setScheduleOpen(false)}
+            onClick={() => {
+              setScheduleOpen(false);
+              clear();
+            }}
             className="flex-1"
           >
             Maybe later

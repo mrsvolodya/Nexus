@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -68,7 +69,9 @@ export default function RootLayout({
       className={`${inter.variable} ${display.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
-      <body className="relative min-h-screen overflow-x-hidden">{children}</body>
+      <body className="relative min-h-screen overflow-x-hidden">
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      </body>
     </html>
   );
 }

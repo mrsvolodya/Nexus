@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useEscape } from "@/hooks/useEscape";
+import type { ClickOrigin } from "@/hooks/useClickOrigin";
 
 type ModalProps = {
   open: boolean;
@@ -15,6 +16,8 @@ type ModalProps = {
   children?: React.ReactNode;
   className?: string;
   size?: "sm" | "md" | "lg";
+  /** Viewport point the modal should expand from (set by the trigger). */
+  origin?: ClickOrigin;
 };
 
 const SIZE: Record<NonNullable<ModalProps["size"]>, string> = {
@@ -31,6 +34,7 @@ export function Modal({
   children,
   className,
   size = "md",
+  origin,
 }: ModalProps) {
   useEscape(open, onClose);
   const [mounted, setMounted] = React.useState(false);
@@ -47,6 +51,10 @@ export function Modal({
 
   if (!mounted) return null;
 
+  const transformOrigin = origin
+    ? `${origin.x}px ${origin.y}px`
+    : "50% 50%";
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -57,15 +65,36 @@ export function Modal({
           aria-labelledby={title ? "modal-title" : undefined}
           aria-describedby={description ? "modal-description" : undefined}
         >
+          {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-slate-900/20 backdrop-blur-[6px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-slate-900/20"
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            transition={{ duration: 0.3 }}
             onClick={onClose}
           />
 
+          {/* Glow expanding from the click point */}
+          {origin && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute h-40 w-40 rounded-full"
+              style={{
+                left: origin.x - 80,
+                top: origin.y - 80,
+                background:
+                  "radial-gradient(closest-side, rgba(94,234,212,0.7), rgba(56,189,248,0.3) 60%, transparent 80%)",
+                filter: "blur(30px)",
+              }}
+              initial={{ opacity: 0, scale: 0.2 }}
+              animate={{ opacity: [0.8, 0.2], scale: [0.5, 4] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            />
+          )}
+
+          {/* Panel — expands from the click origin */}
           <motion.div
             role="document"
             className={cn(
@@ -73,10 +102,11 @@ export function Modal({
               SIZE[size],
               className,
             )}
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin }}
+            initial={{ opacity: 0, scale: 0.85, filter: "blur(8px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
             <button
               type="button"
